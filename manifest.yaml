@@ -21,7 +21,7 @@ tools:
   - name: render_scene
     description:
       en_US: "Render a dynamic reading scene based on the content"
-      zh_Hans: "根据内容渲染动态阅读场景"
+      zh_Hans: "根据内容渲染动态的阅读场景"
     function: scene_renderer.py:render_scene
     input_schema:
       type: object
