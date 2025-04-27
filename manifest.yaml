@@ -14,11 +14,14 @@ resource:
   permission: {}
 plugins:
   tools:
-    - name: render_scene
+    - identity:
+        name: render_scene
       description:
         en_US: "Render a dynamic reading scene based on the content"
         zh_Hans: "根据内容渲染动态的阅读场景"
-      function: scene_renderer.py:render_scene
+      function:
+        path: scene_renderer.py
+        method: render_scene
       input_schema:
         type: object
         properties:
@@ -47,11 +50,14 @@ plugins:
               en_US: "Animation parameters for the scene"
               zh_Hans: "场景的动画参数"
 
-    - name: handle_interaction
+    - identity:
+        name: handle_interaction
       description:
         en_US: "Handle user interaction with the reading scene"
         zh_Hans: "处理用户与阅读场景的交互"
-      function: interaction_handler.py:handle_interaction
+      function:
+        path: interaction_handler.py
+        method: handle_interaction
       input_schema:
         type: object
         properties:

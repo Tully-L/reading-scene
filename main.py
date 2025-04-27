@@ -1,6 +1,7 @@
 import os
 import sys
 from typing import Dict, Any, Optional
+from dify_plugin import Plugin, DifyPluginEnv
 
 def get_root_path() -> str:
     """Get the root path of the project."""
@@ -57,4 +58,9 @@ def load_credentials(credentials: Optional[Dict[str, Any]]) -> None:
         credentials: The plugin credentials.
     """
     # This plugin doesn't require external credentials
-    pass 
+    pass
+
+plugin = Plugin(DifyPluginEnv(MAX_REQUEST_TIMEOUT=120))
+
+if __name__ == '__main__':
+    plugin.run() 
