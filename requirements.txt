@@ -1,0 +1,5 @@
+flask==2.3.3
+flask-restful==0.3.10
+requests==2.31.0
+lxml==4.9.3
+svgwrite==1.4.3 

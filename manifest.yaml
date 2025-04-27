@@ -1,0 +1,95 @@
+schema_version: v1
+name: ReadingScene
+version: 0.0.1
+description:
+  en_US: "Dynamic SVG scenes and user interactions for Meow Reader"
+  zh_Hans: "实现SVG动态场景和用户交互"
+author: Tully-L
+contact: 2332486893@qq.com
+privacy_policy_url: ./privacy_policy.md
+icon: ./icon.png
+homepage: https://github.com/Tully-L/reading-scene
+authorization:
+  type: none
+tags:
+  - reading
+  - scene
+  - svg
+  - interaction
+
+tools:
+  - name: render_scene
+    description:
+      en_US: "Render a dynamic reading scene based on the content"
+      zh_Hans: "根据内容渲染动态阅读场景"
+    function: scene_renderer.py:render_scene
+    input_schema:
+      type: object
+      properties:
+        content:
+          type: string
+          description:
+            en_US: "Reading content to visualize"
+            zh_Hans: "要可视化的阅读内容"
+        theme:
+          type: string
+          description:
+            en_US: "Visual theme for the scene"
+            zh_Hans: "场景的视觉主题"
+          enum: [cozy, outdoor, fantasy, modern]
+    output_schema:
+      type: object
+      properties:
+        svg_content:
+          type: string
+          description:
+            en_US: "SVG content to display"
+            zh_Hans: "要显示的SVG内容"
+        animation_data:
+          type: object
+          description:
+            en_US: "Animation parameters for the scene"
+            zh_Hans: "场景的动画参数"
+
+  - name: handle_interaction
+    description:
+      en_US: "Handle user interaction with the reading scene"
+      zh_Hans: "处理用户与阅读场景的交互"
+    function: interaction_handler.py:handle_interaction
+    input_schema:
+      type: object
+      properties:
+        interaction_type:
+          type: string
+          description:
+            en_US: "Type of user interaction"
+            zh_Hans: "用户交互类型"
+          enum: [click, hover, drag]
+        element_id:
+          type: string
+          description:
+            en_US: "ID of the interacted element"
+            zh_Hans: "交互元素的ID"
+        position:
+          type: object
+          description:
+            en_US: "Position of interaction"
+            zh_Hans: "交互位置"
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+    output_schema:
+      type: object
+      properties:
+        response_action:
+          type: string
+          description:
+            en_US: "Action to take in response"
+            zh_Hans: "响应动作"
+        update_data:
+          type: object
+          description:
+            en_US: "Data for updating the scene"
+            zh_Hans: "更新场景的数据" 
