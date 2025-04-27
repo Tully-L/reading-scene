@@ -18,9 +18,7 @@ plugins:
       description:
         en_US: "Render a dynamic reading scene based on the content"
         zh_Hans: "根据内容渲染动态的阅读场景"
-      function:
-        file: scene_renderer.py
-        name: render_scene
+      function: scene_renderer.py:render_scene
       input_schema:
         type: object
         properties:
@@ -53,9 +51,7 @@ plugins:
       description:
         en_US: "Handle user interaction with the reading scene"
         zh_Hans: "处理用户与阅读场景的交互"
-      function:
-        file: interaction_handler.py
-        name: handle_interaction
+      function: interaction_handler.py:handle_interaction
       input_schema:
         type: object
         properties:
