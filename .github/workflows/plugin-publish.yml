@@ -1,4 +1,4 @@
-# .github/workflows/plugin-publish.yml
+# .github/workflows/auto-pr.yml
 name: Auto Create PR on Main Push
 
 on:
@@ -6,13 +6,13 @@ on:
     branches: [ main ]  # Trigger on push to main
 
 jobs:
-  create_pr:
+  create_pr: # Renamed job for clarity
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Print working directory
+      - name: Print working directory # Kept for debugging
         run: |
           pwd
           ls -la
@@ -32,10 +32,9 @@ jobs:
           pwd
           ls -la dify-plugin-linux-amd64
 
-      - name: Get basic info from manifest
+      - name: Get basic info from manifest # Changed step name and content
         id: get_basic_info
         run: |
-          cd reading-scene
           PLUGIN_NAME=$(grep "^name:" manifest.yaml | cut -d' ' -f2)
           echo "Plugin name: $PLUGIN_NAME"
           echo "plugin_name=$PLUGIN_NAME" >> $GITHUB_OUTPUT
@@ -44,6 +43,7 @@ jobs:
           echo "Plugin version: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+          # If the author's name is not your github username, you can change the author here
           AUTHOR=$(grep "^author:" manifest.yaml | cut -d' ' -f2)
           echo "Plugin author: $AUTHOR"
           echo "author=$AUTHOR" >> $GITHUB_OUTPUT
@@ -52,49 +52,36 @@ jobs:
         id: package
         run: |
           # Use the downloaded CLI tool to package
-          cd $GITHUB_WORKSPACE/reading-scene
+          cd $GITHUB_WORKSPACE
           # Use variables for package name
           PACKAGE_NAME="${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}.difypkg"
-          
-          # Debug - list all files
-          find . -type f | grep -v ".git" | sort
-          
-          # Debug - print manifest content
-          echo "Manifest content:"
-          cat manifest.yaml
-          
-          # Try alternative packaging command with debug
-          echo "Trying alternative packaging..."
-          $RUNNER_TEMP/bin/dify-plugin-linux-amd64 plugin package . --type tool -o "$PACKAGE_NAME"
-          
-          # If that fails, try another approach
-          if [ $? -ne 0 ]; then
-            echo "First attempt failed, trying another approach..."
-            echo "tools:" > temp_manifest.yaml
-            cat manifest.yaml >> temp_manifest.yaml
-            echo "Using modified manifest:"
-            cat temp_manifest.yaml
-            $RUNNER_TEMP/bin/dify-plugin-linux-amd64 plugin package . -f temp_manifest.yaml -o "$PACKAGE_NAME"
-          fi
-          
+          # Use CLI from runner temp
+          $RUNNER_TEMP/bin/dify-plugin-linux-amd64 plugin package . -o "$PACKAGE_NAME"
+
           # Show packaging result
           echo "Package result:"
-          ls -la "$PACKAGE_NAME" || echo "Packaging failed"
+          ls -la "$PACKAGE_NAME"
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
-          mv "$PACKAGE_NAME" $GITHUB_WORKSPACE/
+
+          # Show full file path and directory structure (kept for debugging)
+          echo "\\nFull file path:"
+          pwd
+          echo "\\nDirectory structure:"
+          tree || ls -R
 
       - name: Checkout target repo
         uses: actions/checkout@v3
         with:
+          # Use author variable for repository
           repository: ${{steps.get_basic_info.outputs.author}}/dify-plugins
           path: dify-plugins
           token: ${{ secrets.PLUGIN_ACTION }}
-          fetch-depth: 1
-          persist-credentials: true
+          fetch-depth: 1 # Fetch only the last commit to speed up checkout
+          persist-credentials: true # Persist credentials for subsequent git operations
 
       - name: Prepare and create PR
         run: |
-          # Debug info
+          # Debug info (kept)
           echo "Debug: Current directory $(pwd)"
           # Use variable for package name
           PACKAGE_NAME="${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}.difypkg"
@@ -121,30 +108,36 @@ jobs:
           BRANCH_NAME="bump-${{ steps.get_basic_info.outputs.plugin_name }}-plugin-${{ steps.get_basic_info.outputs.version }}"
           git checkout -b "$BRANCH_NAME"
 
-          # Add and commit changes
+          # Add and commit changes (using git add .)
           git add .
-          git status
+          git status # for debugging
           # Use variables in commit message
           git commit -m "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin to version ${{ steps.get_basic_info.outputs.version }}"
 
-          # Push to remote
+          # Push to remote (use force just in case the branch existed before from a failed run)
           git push -u origin "$BRANCH_NAME" --force
 
-          # Confirm branch has been pushed and wait for sync
+          # Confirm branch has been pushed and wait for sync (GitHub API might need a moment)
           git branch -a
           echo "Waiting for branch to sync..."
-          sleep 10
+          sleep 10  # Wait 10 seconds for branch sync
 
       - name: Create PR via GitHub API
         env:
-          GH_TOKEN: ${{ secrets.PLUGIN_ACTION }}
+          GH_TOKEN: ${{ secrets.PLUGIN_ACTION }} # Use the provided token for authentication
         run: |
           gh pr create \
             --repo langgenius/dify-plugins \
-            --head "${{ steps.get_basic_info.outputs.author }}:bump-${{ steps.get_basic_info.outputs.plugin_name }}-plugin-${{ steps.get_basic_info.outputs.version }}" \
+            --head "${{ steps.get_basic_info.outputs.author }}:${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}" \
             --base main \
             --title "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin to version ${{ steps.get_basic_info.outputs.version }}" \
             --body "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin package to version ${{ steps.get_basic_info.outputs.version }}
 
             Changes:
-            - Updated plugin package file" || echo "PR already exists or creation skipped."
+            - Updated plugin package file" || echo "PR already exists or creation skipped." # Handle cases where PR already exists
+
+      - name: Print environment info # Kept for debugging
+        run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "Current directory contents:"
+          ls -R
